@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from 'next'
 import React from 'react'
 
+import { ViewTransitionsProvider } from '@/components/nav/ViewTransitions'
+import { getRequestContext } from '@/lib/request'
+
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -15,22 +18,36 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#fafaf9' },
-    { media: '(prefers-color-scheme: dark)', color: '#1c1917' },
+    { media: '(prefers-color-scheme: light)', color: '#F6F5F2' },
+    { media: '(prefers-color-scheme: dark)', color: '#121211' },
   ],
 }
 
 /** Applies the stored theme before first paint so there is no flash. */
 const themeScript = `(function(){try{var t=localStorage.getItem('theme');var d=t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.theme=d?'dark':'light'}catch(e){}})()`
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const { site } = await getRequestContext()
+  const accent = site?.accentColour ?? '#8B2D2D'
+
   return (
-    <html lang="en-GB" suppressHydrationWarning>
+    <html
+      lang="en-GB"
+      suppressHydrationWarning
+      style={{ '--site-accent': accent } as React.CSSProperties}
+    >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <link
+          rel="preload"
+          href="/fonts/ibm-plex-sans-latin-wght-normal.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
       </head>
-      <body className="min-h-dvh bg-stone-50 font-sans text-stone-900 antialiased dark:bg-stone-900 dark:text-stone-100">
-        {children}
+      <body className="min-h-dvh bg-bg font-sans text-ink">
+        <ViewTransitionsProvider>{children}</ViewTransitionsProvider>
       </body>
     </html>
   )

@@ -1,45 +1,57 @@
 import React from 'react'
 
-const PALETTE = [
-  '#b45309',
-  '#0f766e',
-  '#1d4ed8',
-  '#7e22ce',
-  '#be123c',
-  '#4d7c0f',
-  '#0e7490',
-  '#a16207',
-]
+import { avatarParams } from '@/lib/avatar'
 
-function hash(input: string): number {
-  let h = 2166136261
-  for (let i = 0; i < input.length; i++) {
-    h ^= input.charCodeAt(i)
-    h = Math.imul(h, 16777619)
-  }
-  return h >>> 0
-}
+export type AvatarParams = ReturnType<typeof avatarParams>
 
-export function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return '?'
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+/** Stable avatar parameters for a user. Seeded with the lower-cased email, never change this. */
+export function avatarFor(email: string): AvatarParams {
+  return avatarParams(email.trim().toLowerCase())
 }
 
 /**
- * Deterministic avatar from the user's seed. Phase 3 replaces the fill with
- * abstract shapes; the colour and initials carry over so avatars stay stable.
+ * Generated avatar: circle with an offset circle and a rotated rounded square
+ * from a fixed palette. Pure CSS so there are no SVG id collisions.
  */
-export function Avatar({ seed, name, size = 32 }: { seed: string; name: string; size?: number }) {
-  const colour = PALETTE[hash(seed) % PALETTE.length]
+export function Avatar({
+  params,
+  size,
+  label,
+}: {
+  params: AvatarParams
+  size: number
+  label?: string
+}) {
   return (
     <span
-      aria-hidden
-      className="inline-flex shrink-0 select-none items-center justify-center rounded-full font-semibold text-white"
-      style={{ width: size, height: size, background: colour, fontSize: Math.round(size * 0.4) }}
+      className="relative inline-block shrink-0 overflow-hidden rounded-full align-middle"
+      style={{ width: size, height: size, background: params.bg }}
+      role={label ? 'img' : undefined}
+      aria-label={label}
+      aria-hidden={label ? undefined : true}
     >
-      {initials(name)}
+      <span
+        className="absolute rounded-full"
+        style={{
+          width: '70%',
+          height: '70%',
+          left: `${params.x1}%`,
+          top: `${params.y1}%`,
+          background: params.c1,
+        }}
+      />
+      <span
+        className="absolute"
+        style={{
+          width: '55%',
+          height: '55%',
+          left: `${params.x2}%`,
+          top: `${params.y2}%`,
+          borderRadius: '18%',
+          transform: `rotate(${params.rot}deg)`,
+          background: params.c2,
+        }}
+      />
     </span>
   )
 }

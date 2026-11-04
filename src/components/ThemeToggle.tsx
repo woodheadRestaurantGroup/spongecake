@@ -21,6 +21,7 @@ export function applyTheme(theme: Theme) {
   document.documentElement.dataset.theme = dark ? 'dark' : 'light'
 }
 
+/** Segmented control: track p4 r14 surface-2, segments h44 r10, active surface with a 1px line ring. */
 export function ThemeToggle() {
   const stored = useLocalStorageValue('theme')
   const theme: Theme = isTheme(stored) ? stored : 'system'
@@ -34,24 +35,25 @@ export function ThemeToggle() {
     <div
       role="radiogroup"
       aria-label="Appearance"
-      className="inline-flex rounded-lg border border-stone-300 p-0.5 dark:border-stone-700"
+      className="grid grid-cols-3 gap-1 rounded-[14px] bg-surface-2 p-1"
     >
-      {OPTIONS.map((o) => (
-        <button
-          key={o.value}
-          type="button"
-          role="radio"
-          aria-checked={theme === o.value}
-          onClick={() => choose(o.value)}
-          className={`rounded-md px-3 py-1.5 text-sm font-medium ${
-            theme === o.value
-              ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900'
-              : 'text-stone-600 dark:text-stone-300'
-          }`}
-        >
-          {o.label}
-        </button>
-      ))}
+      {OPTIONS.map((o) => {
+        const active = theme === o.value
+        return (
+          <button
+            key={o.value}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            onClick={() => choose(o.value)}
+            className={`h-11 rounded-[10px] text-[15px] font-semibold transition-colors duration-[140ms] ${
+              active ? 'bg-surface text-ink shadow-[0_0_0_1px_var(--color-line)]' : 'text-ink-2'
+            }`}
+          >
+            {o.label}
+          </button>
+        )
+      })}
     </div>
   )
 }

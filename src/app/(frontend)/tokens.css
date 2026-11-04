@@ -1,0 +1,74 @@
+/* Spongecake design tokens — Tailwind CSS 4.
+   Import after `@import "tailwindcss";`. Per-site accent is injected at runtime:
+   <html style="--site-accent:#8B2D2D"> (from the site record). Dark is selected with
+   [data-theme="dark"] on <html>; "System" sets it from prefers-color-scheme. */
+
+@theme {
+  --font-sans: 'IBM Plex Sans', -apple-system, system-ui, sans-serif;
+
+  /* colours (light) — Tailwind utilities: bg-bg, bg-surface, text-ink-2, border-line … */
+  --color-bg: #f6f5f2;
+  --color-surface: #ffffff;
+  --color-surface-2: #eeece7;
+  --color-ink: #1a1917;
+  --color-ink-2: #57534d;
+  --color-ink-3: #8c877f;
+  --color-line: #e2dfd8;
+  --color-danger: #b3261e;
+  --color-accent: var(--site-accent, #8b2d2d);
+  --color-accent-soft: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  --color-on-accent: #ffffff;
+
+  /* type scale: size / line-height / weight / tracking */
+  --text-title: 30px;
+  --text-title--line-height: 1.15; /* 600, -0.015em; desktop 40px/1.1, -0.02em */
+  --text-section: 22px;
+  --text-section--line-height: 1.27; /* 600, -0.01em */
+  --text-cook: 22px;
+  --text-cook--line-height: 1.45; /* 400; bold lead 600 */
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 1.5; /* ingredient + method; qty 600 tabular-nums */
+  --text-card: 17px;
+  --text-card--line-height: 1.3; /* 600 */
+  --text-body: 16px;
+  --text-body--line-height: 1.5;
+  --text-meta: 14px;
+  --text-meta--line-height: 1.4;
+  --text-label: 13px;
+  --text-label--line-height: 1.2; /* 600, uppercase, 0.06em */
+  --text-scaler: 32px;
+  --text-scaler--line-height: 1.05; /* 600 tabular-nums */
+  --text-code: 30px; /* OTP boxes, 600 tabular-nums */
+
+  /* radii */
+  --radius-xs: 8px; /* sub-recipe pill, small text buttons */
+  --radius-sm: 10px; /* multipliers, logo tile 36px, thumbnails */
+  --radius-md: 12px; /* steppers, secondary buttons, code boxes */
+  --radius-lg: 14px; /* cards, inputs, primary button, grouped lists */
+  --radius-xl: 16px; /* scaler card, recipe-level panels, logo tile 64px */
+  --radius-sheet: 28px;
+  /* pills: rounded-full */
+
+  /* spacing — Tailwind 4 base 4px; key values */
+  --spacing: 4px; /* gutter 16 (p-4), section gaps 26–36, row padding 12–14 */
+
+  /* motion */
+  --ease-ios: cubic-bezier(0.32, 0.72, 0, 1);
+  --duration-push: 300ms;
+  --duration-sheet: 320ms;
+  --duration-press: 90ms;
+  --duration-state: 120ms;
+}
+
+[data-theme='dark'] {
+  --color-bg: #121211;
+  --color-surface: #1c1b19;
+  --color-surface-2: #282623;
+  --color-ink: #f3f1ec;
+  --color-ink-2: #ada9a1;
+  --color-ink-3: #7a766f;
+  --color-line: #33312d;
+  --color-danger: #f2877c;
+  --color-accent: color-mix(in oklch, var(--site-accent, #8b2d2d) 60%, white);
+  color-scheme: dark;
+}

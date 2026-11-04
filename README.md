@@ -3,6 +3,7 @@
 Internal recipe database for Woodhead Restaurant Group kitchens. One branded instance per site, served from a single Next.js and Payload CMS application.
 
 - Product requirements: [docs/PRD.md](docs/PRD.md)
+- Design handoff (tokens, screens, emails): [docs/design/handoff/README.md](docs/design/handoff/README.md)
 
 ## Stack
 
@@ -13,7 +14,8 @@ Next.js 16 (App Router) with Payload 3, Postgres (Neon in production), Vercel Bl
 - **Sites** are tenants. The request hostname picks the site; `DEFAULT_SITE_SLUG` is the fallback for previews and local development.
 - **Users** hold one membership per site with a role: Viewer, Editor or Site Admin. Group Admins span every site. Access rules live in `src/access/roles.ts` and on each collection.
 - **Sign-in** is by magic link or six-digit code (`src/lib/auth`). There are no passwords. Sessions are 90-day JWT cookies and renew themselves past the midpoint.
-- **Recipes** are authored in the Payload admin at `/admin` with live preview. The front end under `src/app/(frontend)` renders them for phones, with yield scaling done client side.
+- **Recipes** are authored in the Payload admin at `/admin` with live preview. The front end under `src/app/(frontend)` renders them for phones, with yield scaling done client side, a full-screen cook mode, favourites, history, and suggestions that email the site's editors.
+- **Design tokens** live in `src/app/(frontend)/tokens.css` (Tailwind 4 theme, light and dark). The per-site accent is set on `<html>` from the site record. Avatars are generated from the user's email by `src/lib/avatar.ts` and must never change once shipped.
 
 ## Local development
 
