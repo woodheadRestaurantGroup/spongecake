@@ -38,7 +38,9 @@ export type RequestContext = {
 export const getRequestContext = cache(async (): Promise<RequestContext> => {
   const [h, cookieStore] = await Promise.all([headers(), cookies()])
   const payload = await getPayloadClient()
-  const host = h.get('host')
+  // Behind Vercel, and on the render that follows a server action redirect, the public
+  // hostname is in x-forwarded-host while host may be the internal address.
+  const host = h.get('x-forwarded-host') ?? h.get('host')
   const chosenSlug = cookieStore.get(SITE_COOKIE)?.value ?? null
 
   const [site, auth] = await Promise.all([
