@@ -1,0 +1,11 @@
+Subject: Your Spongecake sign-in code: 482913
+
+Hi Head,
+
+Your sign-in code is 482913
+
+Type it into the Spongecake sign-in screen, or open this link on the same device:
+https://spongecake.thequalitychophouse.com/auth/verify?token=example
+
+The code and link work for 15 minutes and can only be used once.
+If you did not ask to sign in, you can ignore this email.
