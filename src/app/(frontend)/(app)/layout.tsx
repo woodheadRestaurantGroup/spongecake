@@ -10,7 +10,10 @@ import { shouldRefreshSession } from '@/lib/auth/session'
 import { idOf, listPublishedRecipes, listTags, siteInitial } from '@/lib/recipes/queries'
 import { getRequestContext } from '@/lib/request'
 
+import { SitePicker } from '@/components/SitePicker'
+
 import { signOutAction } from '../(auth)/actions'
+import { chooseSiteAction } from './actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,9 +21,56 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const ctx = await getRequestContext()
 
   if (!ctx.site) {
+    if (ctx.user) {
+      // A signed-in person on an address with no site (a preview URL, say) picks one of their sites.
+      const memberSites = (ctx.user.memberships ?? [])
+        .map((m) => (typeof m.site === 'object' ? m.site : null))
+        .filter((s): s is NonNullable<typeof s> => s !== null)
+      const all = ctx.isGroupAdmin
+        ? (
+            await ctx.payload.find({
+              collection: 'sites',
+              sort: 'name',
+              limit: 50,
+              depth: 0,
+              overrideAccess: true,
+            })
+          ).docs
+        : memberSites
+      return (
+        <main className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col justify-center px-6 py-12">
+          <SitePicker
+            sites={all.map((s) => ({
+              slug: s.slug,
+              name: s.name,
+              accent: s.accentColour ?? '#8B2D2D',
+            }))}
+            host={ctx.host ?? ''}
+            canAdmin={ctx.isGroupAdmin}
+            action={chooseSiteAction}
+          />
+          <form action={signOutAction} className="mt-8 text-center">
+            <button type="submit" className="text-[15px] font-semibold text-ink-2">
+              Sign out
+            </button>
+          </form>
+        </main>
+      )
+    }
     return (
       <main className="flex min-h-dvh items-center justify-center">
-        <EmptyState title="No Spongecake here" body="This address isn’t set up for a restaurant." />
+        <EmptyState
+          title="No Spongecake here"
+          body="This address isn’t set up for a restaurant."
+          action={
+            <a
+              href="/sign-in"
+              className="inline-flex h-11 items-center rounded-[12px] bg-surface-2 px-[18px] text-[15px] font-semibold"
+            >
+              Sign in
+            </a>
+          }
+        />
       </main>
     )
   }

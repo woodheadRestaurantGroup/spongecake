@@ -1,12 +1,12 @@
 import config from '@payload-config'
 import { decodeJwt } from 'jose'
-import { headers } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { getPayload, type Payload } from 'payload'
 import { cache } from 'react'
 
 import { isGroupAdmin, roleAtSite, type Role } from '@/access/roles'
 import { extractToken } from '@/lib/auth/strategy'
-import { getSiteForHost } from '@/lib/site'
+import { SITE_COOKIE, getSiteForHost } from '@/lib/site'
 import type { Site, User } from '@/payload-types'
 
 export const getPayloadClient = cache((): Promise<Payload> => getPayload({ config }))
@@ -36,12 +36,13 @@ export type RequestContext = {
  * Memoised per request.
  */
 export const getRequestContext = cache(async (): Promise<RequestContext> => {
-  const h = await headers()
+  const [h, cookieStore] = await Promise.all([headers(), cookies()])
   const payload = await getPayloadClient()
   const host = h.get('host')
+  const chosenSlug = cookieStore.get(SITE_COOKIE)?.value ?? null
 
   const [site, auth] = await Promise.all([
-    getSiteForHost(payload, host),
+    getSiteForHost(payload, host, chosenSlug),
     payload.auth({ headers: h }),
   ])
   const user = (auth.user as SessionUser | null) ?? null

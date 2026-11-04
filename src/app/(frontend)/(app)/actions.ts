@@ -1,6 +1,11 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+
+import { isGroupAdmin, roleAtSite } from '@/access/roles'
+import { SITE_COOKIE } from '@/lib/site'
 
 import { getRequestContext } from '@/lib/request'
 
@@ -35,6 +40,35 @@ export async function toggleFavouriteAction(recipeId: number): Promise<{ favouri
   })
   revalidatePath('/')
   return { favourite }
+}
+
+/**
+ * Remembers which site to show on an address that matches no site domain,
+ * such as a preview deployment. Only sites the user belongs to can be chosen.
+ */
+export async function chooseSiteAction(formData: FormData): Promise<void> {
+  const { payload, user } = await getRequestContext()
+  if (!user) redirect('/sign-in')
+  const slug = String(formData.get('slug') ?? '')
+  const result = await payload.find({
+    collection: 'sites',
+    where: { slug: { equals: slug } },
+    limit: 1,
+    depth: 0,
+    overrideAccess: true,
+  })
+  const site = result.docs[0]
+  if (!site) redirect('/')
+  if (!isGroupAdmin(user) && !roleAtSite(user, site.id)) redirect('/')
+
+  const cookieStore = await cookies()
+  cookieStore.set(SITE_COOKIE, site.slug, {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 365,
+  })
+  redirect('/')
 }
 
 export type SuggestionState = { ok?: boolean; error?: string }
