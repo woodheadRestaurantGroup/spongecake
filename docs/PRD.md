@@ -1,6 +1,6 @@
 # Spongecake – Product Requirements Document
 
-**Status:** Draft v1 for sign-off
+**Status:** v1 agreed, ready to build
 **Owner:** James Woodhead (Woodhead Restaurant Group)
 **Date:** 4 November 2026
 
@@ -65,13 +65,15 @@ How it works:
 
 Sites and domains known today:
 
-| Site | Domain | DNS control |
-|---|---|---|
-| The Quality Chop House | `spongecake.thequalitychophouse.com` | James |
-| Portland | `spongecake.portlandrestaurant.co.uk` | James or previous developer |
-| Three further sites | TBC | James owns three of five; previous developer holds two |
+| Site | Domain |
+|---|---|
+| The Quality Chop House | `spongecake.thequalitychophouse.com` |
+| Portland | `spongecake.portlandrestaurant.co.uk` |
+| Clipstone | `spongecake.clipstonerestaurant.co.uk` |
+| Quality Wines | `spongecake.qualitywinesfarringdon.com` |
+| 64 Goodge Street | `spongecake.64goodgestreet.co.uk` |
 
-Action before launch: confirm the full list of five domains and arrange DNS access for the two held by the previous developer.
+James controls DNS for three of the five root domains. The other two are reachable through the previous developer. Action before Phase 5: arrange DNS access or a CNAME record for those two.
 
 ## 5. Authentication and sessions
 
@@ -89,7 +91,7 @@ Rules:
 - Links and codes expire after 15 minutes and are single use.
 - Requests are rate limited per email and per IP.
 - Unknown emails receive no email and the UI gives the same "check your inbox" response, so the form cannot be used to discover accounts.
-- Group Admins additionally keep a password for break-glass access to the admin panel in case email delivery fails.
+- Group Admins additionally keep a password for break-glass access to the admin panel in case email delivery fails. James is the sole Group Admin at launch.
 
 ### 5.2 Session persistence
 
@@ -142,7 +144,7 @@ Drafts and versions enabled. Versions power edit history.
 | site | relationship | Tenant |
 | status | drafts (`draft` / `published`) + `archived` checkbox | Front end shows published and not archived. Archived recipes stay in the admin and history. |
 | author | relationship to Users | Defaults to the creating user. Editable by Site Admins and Group Admins only, so recipes typed up during data entry can be credited to the chef who wrote them. |
-| heroImage | upload (Media), optional | Shown at top of recipe when present |
+| heroImage | upload (Media), optional | Shown at top of recipe when present. Method steps may also carry an inline image each (see `method`). |
 | yield | group { amount: number, label: text } | Amount is required. Label defaults to "portions" and is free text per recipe, for example "litres", "trays", "loaves". |
 | ingredientSections | array | See below. At least one section. A single section with no title renders as a flat list. |
 | method | array of steps | Each step is rich text (bold, italic, links only) with an optional image. Steps render numbered and become checkboxes in cook mode. |
@@ -211,7 +213,7 @@ Layout in order: hero image (if any), title, author line (avatar, name, "last ed
 
 Actions: Favourite, Cook mode, Print, Suggest an edit, and for Editors an "Edit in admin" link that opens the Payload editor for this recipe.
 
-Readability: large base type, generous line height, high contrast, no text below 16px, tap targets at least 44px. Respects system dark mode.
+Readability: large base type, generous line height, high contrast, no text below 16px, tap targets at least 44px. Light and dark themes, chosen by the user (see 7.11), defaulting to the system setting.
 
 ### 7.4 Yield scaling
 
@@ -266,6 +268,7 @@ Readability: large base type, generous line height, high contrast, no text below
 - Avatar, name, email, sites the user belongs to with role.
 - Favourites list.
 - My suggestions with status.
+- Appearance: Light, Dark or System. Stored on the device and applied before first paint to avoid a flash.
 - Install instructions for adding to the home screen (iOS cannot prompt programmatically, so this is a short illustrated guide).
 - Sign out.
 
@@ -314,7 +317,7 @@ Kitchens often have patchy signal, so the app must degrade gracefully.
 | CMS and API | Payload 3 with multi-tenant plugin, drafts, versions, live preview | Structured content, auth, access control and versioning out of the box |
 | Database | **Neon Postgres**, AWS eu-west-2 (London) | See 9.1 |
 | Media | Vercel Blob via Payload storage adapter | Zero config with Vercel, image volume is low |
-| Email | Resend via Payload email adapter | Reliable transactional delivery for magic links and suggestion alerts; UK-friendly pricing; free tier covers launch volume |
+| Email | Resend via Payload email adapter, sending from `send.woodheadrestaurantgroup.co.uk` | Domain is already verified in Resend for other group projects; free tier covers launch volume |
 | Hosting | Vercel Pro, functions pinned to `lhr1` (London) | Edge caching, custom domains per site, preview deployments |
 | Service worker | Serwist | Maintained successor to next-pwa, App Router support |
 | Search | Client-side fuzzy search over a published JSON index | Instant, works offline, trivially small at this scale |
@@ -360,18 +363,24 @@ Expect roughly £20 to £35 per month in total at launch.
 - Error monitoring via Sentry. Vercel Analytics for page performance.
 - All traffic over HTTPS with HSTS. Admin and API share the same origin, so no CORS surface.
 
-## 11. Open questions
+## 11. Resolved questions
 
-1. **Sending domain for email.** Magic links and suggestion alerts need a verified sending domain, for example `spongecake@woodheadrestaurantgroup.co.uk`. Which domain, and who can add DNS records for it?
-2. **Author override during data entry.** Confirmed as a Site Admin ability (6.3). Please confirm the team member doing data entry will have Site Admin or that you will reassign authors afterwards.
-3. **Display precision for scaled quantities.** Proposed: up to two decimal places, trailing zeros trimmed, never rounded to whole units. Confirm or set a different precision.
-4. **Who can suggest edits.** Proposed: any signed-in user, including Editors, so the feature also works as a lightweight comment thread. Confirm.
-5. **Who can create tags.** Proposed: Editors create, Site Admins curate the home page. Confirm.
-6. **Dark mode.** Proposed: follow the system setting. Confirm, or specify light only.
-7. **Remaining three site names and domains**, and timing for DNS handover from the previous developer.
-8. **First Group Admin account** is James. Any second person for cover?
-9. **Unit list.** The proposed select list is in 6.3. Anything missing that your kitchens use routinely?
-10. **Recipe images.** Hero image plus optional per-step images is proposed. Is per-step enough, or do you want a gallery?
+All questions raised during requirements gathering are now closed. The answers are folded into the sections above and recorded in the decisions log. For reference:
+
+| Question | Answer |
+|---|---|
+| Email sending domain | `send.woodheadrestaurantgroup.co.uk`, already verified in Resend |
+| Author override for data entry | Yes, Site Admins and Group Admins can set a recipe's author |
+| Scaled quantity display | Up to two decimal places, trailing zeros trimmed, no rounding to whole units |
+| Who can suggest edits | Every signed-in user |
+| Who can create tags | Editors create, Site Admins curate the home page |
+| Dark mode | User-selectable Light, Dark or System on the profile screen |
+| Remaining sites | Clipstone, Quality Wines, 64 Goodge Street (domains in section 4) |
+| Group Admin | James only |
+| Units | Proposed list in 6.3 accepted |
+| Images | Hero image plus optional inline image per method step |
+
+No open questions remain before Phase 0.
 
 ## 12. Build plan
 
@@ -384,7 +393,7 @@ Phases are sequential but short. Each ends with something deployable.
 | **2. App feel** | PWA manifest and icons per site, service worker and offline caching, prefetching and view transitions, favourites, recently viewed, cook mode with wake lock, print view, site branding | Lighthouse targets met; installed app works offline for viewed recipes |
 | **3. Collaboration** | Suggestions with email alerts, edit history with field-level diff, change notes, generated avatars, profile screen with install guide | Full suggest, notify, resolve loop works end to end |
 | **4. Launch QCH** | Recipe data entry by the team, author reassignment, user onboarding, DNS for QCH live, staff privacy notice | QCH staff using it daily |
-| **5. Roll-out** | Add the remaining four sites, branding per site, DNS handover from previous developer | All five sites live |
+| **5. Roll-out** | Add Portland, Clipstone, Quality Wines and 64 Goodge Street, branding per site, DNS for the two domains held by the previous developer | All five sites live |
 | **Later** | Cross-site recipe copy, mobile quick-edit, download-all offline, g to kg unit promotion, allergens | Prioritised after launch feedback |
 
 Phases 1 to 3 are the build. Data entry in Phase 4 can begin as soon as Phase 1 is deployed, in parallel with Phases 2 and 3.
@@ -406,3 +415,10 @@ Phases 1 to 3 are the build. Data entry in Phase 4 can begin as soon as Phase 1 
 | 2026-11-04 | Offline reading of viewed and favourited recipes is in v1. |
 | 2026-11-04 | Vercel hosting with functions in London; Neon Postgres in London. |
 | 2026-11-04 | No pilot; QCH launches directly. |
+| 2026-11-04 | Emails send from the group's existing Resend domain `send.woodheadrestaurantgroup.co.uk`. |
+| 2026-11-04 | Site Admins can override recipe authors so data-entry recipes are credited correctly. |
+| 2026-11-04 | Scaled quantities display to two decimal places, trailing zeros trimmed. |
+| 2026-11-04 | Every signed-in user can suggest edits; Editors create tags, Site Admins curate the home page. |
+| 2026-11-04 | User-selectable theme: Light, Dark or System. |
+| 2026-11-04 | James is the only Group Admin at launch. |
+| 2026-11-04 | Images: hero plus optional inline per-step images. Five sites and domains confirmed. |

@@ -4,4 +4,4 @@ Internal recipe database for Woodhead Restaurant Group kitchens. One branded ins
 
 - Product requirements: [docs/PRD.md](docs/PRD.md)
 
-Status: requirements drafted, build not yet started.
+Status: requirements agreed (see PRD), build starting.
