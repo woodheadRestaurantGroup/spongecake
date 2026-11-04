@@ -1,16 +1,22 @@
-import Link from 'next/link'
 import React from 'react'
+
+import { TransitionLink } from '@/components/nav/ViewTransitions'
+import { EmptyState } from '@/components/ui'
 
 export default function NotFound() {
   return (
-    <div className="py-20 text-center">
-      <h1 className="text-2xl font-semibold">Recipe not found</h1>
-      <p className="mt-2 text-stone-600 dark:text-stone-300">
-        It may have been archived or renamed.
-      </p>
-      <Link href="/" className="mt-6 inline-block font-medium text-accent">
-        Back to all recipes
-      </Link>
-    </div>
+    <EmptyState
+      title="Recipe not found"
+      body="It may have been unpublished or renamed."
+      action={
+        <TransitionLink
+          href="/"
+          direction="pop"
+          className="inline-flex h-11 items-center rounded-[12px] bg-surface-2 px-[18px] text-[15px] font-semibold"
+        >
+          Back to recipes
+        </TransitionLink>
+      }
+    />
   )
 }

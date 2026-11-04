@@ -1,8 +1,12 @@
 import type { Metadata } from 'next'
 import React from 'react'
 
-import { Avatar } from '@/components/Avatar'
+import { Avatar, avatarFor } from '@/components/Avatar'
+import { BackButton, TransitionLink } from '@/components/nav/ViewTransitions'
+import { GroupedList, SectionLabel } from '@/components/ui'
+import { ChevronRight } from '@/components/ui/icons'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { siteInitial } from '@/lib/recipes/queries'
 import { getRequestContext } from '@/lib/request'
 
 import { signOutAction } from '../../(auth)/actions'
@@ -19,56 +23,82 @@ export default async function ProfilePage() {
   const { user, isGroupAdmin } = await getRequestContext()
   if (!user) return null
 
-  const memberships = (user.memberships ?? []).map((m) => ({
-    site: typeof m.site === 'object' ? m.site.name : `Site ${m.site}`,
-    role: ROLE_LABEL[m.role] ?? m.role,
-  }))
+  const sites = (user.memberships ?? []).map((m) => {
+    const site = typeof m.site === 'object' ? m.site : null
+    return {
+      key: String(typeof m.site === 'object' ? m.site.id : m.site),
+      name: site?.name ?? 'Site',
+      accent: site?.accentColour ?? '#8B2D2D',
+      role: ROLE_LABEL[m.role] ?? m.role,
+    }
+  })
 
   return (
-    <div className="space-y-8">
-      <header className="flex items-center gap-4">
-        <Avatar seed={user.avatarSeed ?? String(user.id)} name={user.name} size={64} />
-        <div className="min-w-0">
-          <h1 className="truncate text-2xl font-semibold">{user.name}</h1>
-          <p className="truncate text-stone-600 dark:text-stone-300">{user.email}</p>
-        </div>
-      </header>
+    <div className="pb-12">
+      <div
+        className="flex h-[52px] items-center px-2 lg:hidden"
+        style={{ marginTop: 'env(safe-area-inset-top, 0px)' }}
+      >
+        <BackButton href="/" label="Recipes" />
+      </div>
 
-      <section>
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
-          Sites
-        </h2>
-        <ul className="divide-y divide-stone-200 rounded-xl bg-white ring-1 ring-stone-200 dark:divide-stone-700 dark:bg-stone-800 dark:ring-stone-700">
-          {isGroupAdmin && (
-            <li className="flex justify-between px-4 py-3">
-              <span>All sites</span>
-              <span className="text-stone-500 dark:text-stone-400">Group Admin</span>
-            </li>
-          )}
-          {memberships.map((m, i) => (
-            <li key={i} className="flex justify-between px-4 py-3">
-              <span>{m.site}</span>
-              <span className="text-stone-500 dark:text-stone-400">{m.role}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <div className="flex flex-col items-center px-4 pt-4 text-center">
+        <Avatar params={avatarFor(user.email)} size={72} label={user.name} />
+        <h1 className="mt-3.5 text-[24px] font-semibold">{user.name}</h1>
+        <p className="mt-1 text-[15px] text-ink-2">{user.email}</p>
+      </div>
 
-      <section>
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
-          Appearance
-        </h2>
+      <SectionLabel className="px-4 pb-2.5 pt-7">Sites</SectionLabel>
+      <GroupedList className="mx-4">
+        {isGroupAdmin && (
+          <div className="flex min-h-[60px] items-center gap-3 px-3.5">
+            <span className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[8px] bg-ink text-[14px] font-semibold text-bg">
+              ★
+            </span>
+            <span className="min-w-0 flex-1 truncate text-[16px] font-semibold">All sites</span>
+            <span className="text-[14px] text-ink-2">Group Admin</span>
+          </div>
+        )}
+        {sites.map((s) => (
+          <div key={s.key} className="flex min-h-[60px] items-center gap-3 px-3.5">
+            <span
+              className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[8px] text-[14px] font-semibold text-white"
+              style={{ background: s.accent }}
+            >
+              {siteInitial(s.name)}
+            </span>
+            <span className="min-w-0 flex-1 truncate text-[16px] font-semibold">{s.name}</span>
+            <span className="text-[14px] text-ink-2">{s.role}</span>
+          </div>
+        ))}
+      </GroupedList>
+
+      <SectionLabel className="px-4 pb-2.5 pt-7">Appearance</SectionLabel>
+      <div className="mx-4">
         <ThemeToggle />
-      </section>
+      </div>
 
-      <form action={signOutAction}>
-        <button
-          type="submit"
-          className="w-full rounded-xl border border-stone-300 py-3 font-medium text-stone-700 dark:border-stone-700 dark:text-stone-200"
+      <GroupedList className="mx-4 mt-7">
+        <TransitionLink
+          href="/install"
+          className="flex min-h-[56px] w-full items-center justify-between pl-3.5 pr-2.5 text-[16px] active:bg-surface-2"
         >
-          Sign out
-        </button>
-      </form>
+          <span>Add to Home Screen</span>
+          <ChevronRight className="text-ink-3" />
+        </TransitionLink>
+        <form action={signOutAction}>
+          <button
+            type="submit"
+            className="flex min-h-[56px] w-full items-center px-3.5 text-[16px] font-semibold text-danger active:bg-surface-2"
+          >
+            Sign out
+          </button>
+        </form>
+      </GroupedList>
+
+      <p className="px-4 pb-12 pt-6 text-center text-[13px] text-ink-2">
+        Spongecake · Woodhead Restaurant Group
+      </p>
     </div>
   )
 }

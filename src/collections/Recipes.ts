@@ -76,6 +76,12 @@ const uniqueSlugWithinSite: CollectionBeforeChangeHook = async ({ data, original
   return data
 }
 
+/** Records who saved each version, so the history row can name them. */
+const stampEditor: CollectionBeforeChangeHook = ({ data, req }) => {
+  if (req.user) data.lastEditedBy = req.user.id
+  return data
+}
+
 export const Recipes: CollectionConfig = {
   slug: 'recipes',
   admin: {
@@ -115,7 +121,7 @@ export const Recipes: CollectionConfig = {
   },
   hooks: {
     beforeValidate: [requireRoleAtSiteHook(EDITOR_ROLES)],
-    beforeChange: [uniqueSlugWithinSite],
+    beforeChange: [uniqueSlugWithinSite, stampEditor],
   },
   fields: [
     {
@@ -152,6 +158,12 @@ export const Recipes: CollectionConfig = {
           return siteId !== undefined && hasRoleAtSite(req.user, siteId, ['siteAdmin'])
         },
       },
+    },
+    {
+      name: 'lastEditedBy',
+      type: 'relationship',
+      relationTo: 'users',
+      admin: { hidden: true },
     },
     {
       name: 'archived',

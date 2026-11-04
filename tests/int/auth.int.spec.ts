@@ -63,7 +63,7 @@ describe('magic link sign-in', () => {
     })
     expect(result.sent).toBe(true)
     expect(sent).toHaveLength(1)
-    const code = sent[0].subject.match(/\d{6}/)?.[0]
+    const code = sent[0].subject.match(/^(\d{6}) is your Spongecake code$/)?.[1]
     expect(code).toBeDefined()
 
     expect(await verifyCode(payload, user.email, '000000')).toBeNull()

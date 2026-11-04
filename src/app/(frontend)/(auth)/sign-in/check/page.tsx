@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import React from 'react'
 
+import { BackButton } from '@/components/nav/ViewTransitions'
 import { safeRedirect } from '@/lib/request'
 
 import { CodeForm } from './CodeForm'
@@ -19,25 +19,27 @@ export default async function CheckPage({ searchParams }: { searchParams: Search
     Array.isArray(query.redirect) ? query.redirect[0] : query.redirect,
     '/',
   )
+  const signInHref = `/sign-in${redirectTo !== '/' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`
 
   return (
-    <>
-      <h1 className="text-2xl font-semibold">Check your email</h1>
-      <p className="mt-2 text-stone-600 dark:text-stone-300">
-        If <span className="font-medium text-stone-900 dark:text-stone-100">{email}</span> has an
-        account, a six-digit code is on its way. Type it below, or tap the link in the email on this
-        device.
+    <div
+      className="flex flex-1 flex-col px-6 pb-10"
+      style={{ paddingTop: 'calc(54px + env(safe-area-inset-top, 0px))' }}
+    >
+      <div className="-ml-2.5">
+        <BackButton
+          href={signInHref}
+          label=""
+          className="flex h-11 w-11 items-center justify-center rounded-full active:bg-surface-2"
+        />
+      </div>
+      <h1 className="mt-7 text-[28px] font-semibold leading-[1.15] tracking-[-0.01em]">
+        Check your email
+      </h1>
+      <p className="mt-2.5 text-[17px] leading-[1.45] text-ink-2">
+        Enter the code we sent to <span className="font-semibold text-ink">{email}</span>
       </p>
-      <CodeForm email={email} redirectTo={redirectTo} />
-      <p className="mt-6 text-sm text-stone-500 dark:text-stone-400">
-        Wrong address?{' '}
-        <Link
-          href={`/sign-in${redirectTo !== '/' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`}
-          className="font-medium text-accent"
-        >
-          Start again
-        </Link>
-      </p>
-    </>
+      <CodeForm email={email} redirectTo={redirectTo} signInHref={signInHref} />
+    </div>
   )
 }

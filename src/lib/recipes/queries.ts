@@ -1,14 +1,18 @@
 import type { Payload } from 'payload'
+import { cache } from 'react'
 
+import { avatarFor, type AvatarParams } from '@/components/Avatar'
 import type { Media, Recipe, Tag, User } from '@/payload-types'
 
 export type TagSummary = { id: number; name: string; slug: string }
+
+export type Person = { name: string; avatar: AvatarParams }
 
 export type RecipeSummary = {
   id: number
   slug: string
   title: string
-  author: { name: string; avatarSeed: string }
+  author: Person
   tags: TagSummary[]
   thumbnail: string | null
   /** Lowercased ingredient names for search. */
@@ -16,7 +20,7 @@ export type RecipeSummary = {
   updatedAt: string
 }
 
-function idOf(value: unknown): number | undefined {
+export function idOf(value: unknown): number | undefined {
   if (typeof value === 'number') return value
   if (value && typeof value === 'object' && 'id' in value) return (value as { id: number }).id
   return undefined
@@ -27,9 +31,9 @@ export function tagSummary(tag: number | Tag): TagSummary | null {
   return { id: tag.id, name: tag.name, slug: tag.slug ?? '' }
 }
 
-export function authorSummary(author: number | User): RecipeSummary['author'] {
-  if (typeof author !== 'object') return { name: 'Unknown', avatarSeed: 'unknown' }
-  return { name: author.name, avatarSeed: author.avatarSeed ?? String(author.id) }
+export function person(user: number | User | null | undefined): Person {
+  if (!user || typeof user !== 'object') return { name: 'Unknown', avatar: avatarFor('unknown') }
+  return { name: user.name, avatar: avatarFor(user.email) }
 }
 
 export function imageUrl(
@@ -53,7 +57,7 @@ export function toSummary(recipe: Recipe): RecipeSummary {
     id: recipe.id,
     slug: recipe.slug ?? String(recipe.id),
     title: recipe.title,
-    author: authorSummary(recipe.author),
+    author: person(recipe.author),
     tags: (recipe.tags ?? []).map(tagSummary).filter((t): t is TagSummary => t !== null),
     thumbnail: imageUrl(recipe.heroImage, 'thumbnail'),
     ingredients,
@@ -61,29 +65,28 @@ export function toSummary(recipe: Recipe): RecipeSummary {
   }
 }
 
-/** Every published, unarchived recipe at a site, lightest useful shape, title order. */
-export async function listPublishedRecipes(
-  payload: Payload,
-  siteId: number,
-): Promise<RecipeSummary[]> {
-  const result = await payload.find({
-    collection: 'recipes',
-    where: {
-      and: [
-        { site: { equals: siteId } },
-        { _status: { equals: 'published' } },
-        { archived: { not_equals: true } },
-      ],
-    },
-    sort: 'title',
-    limit: 500,
-    depth: 1,
-    overrideAccess: true,
-  })
-  return result.docs.map(toSummary)
-}
+/** Every published, unarchived recipe at a site, lightest useful shape, title order. Memoised per request. */
+export const listPublishedRecipes = cache(
+  async (payload: Payload, siteId: number): Promise<RecipeSummary[]> => {
+    const result = await payload.find({
+      collection: 'recipes',
+      where: {
+        and: [
+          { site: { equals: siteId } },
+          { _status: { equals: 'published' } },
+          { archived: { not_equals: true } },
+        ],
+      },
+      sort: 'title',
+      limit: 500,
+      depth: 1,
+      overrideAccess: true,
+    })
+    return result.docs.map(toSummary)
+  },
+)
 
-export async function listTags(payload: Payload, siteId: number): Promise<TagSummary[]> {
+export const listTags = cache(async (payload: Payload, siteId: number): Promise<TagSummary[]> => {
   const result = await payload.find({
     collection: 'tags',
     where: { site: { equals: siteId } },
@@ -93,7 +96,7 @@ export async function listTags(payload: Payload, siteId: number): Promise<TagSum
     overrideAccess: true,
   })
   return result.docs.map((t) => ({ id: t.id, name: t.name, slug: t.slug ?? '' }))
-}
+})
 
 /**
  * A single recipe by slug within a site. With `draft` the latest draft is
@@ -125,4 +128,54 @@ export async function getRecipeBySlug(
   return result.docs[0] ?? null
 }
 
-export { idOf }
+export type HistoryEntry = { editor: Person; when: string; at: string; note: string | null }
+
+/** Saved versions of a recipe, newest first, with who saved them. */
+export async function listRecipeHistory(
+  payload: Payload,
+  recipe: Recipe,
+  limit = 10,
+): Promise<HistoryEntry[]> {
+  const versions = await payload.findVersions({
+    collection: 'recipes',
+    where: { parent: { equals: recipe.id } },
+    sort: '-updatedAt',
+    limit,
+    depth: 1,
+    overrideAccess: true,
+  })
+  const fallback = person(recipe.author)
+  return versions.docs.map((v) => {
+    const editor = v.version.lastEditedBy
+    return {
+      editor: editor && typeof editor === 'object' ? person(editor) : fallback,
+      at: v.updatedAt,
+      when: relativeTime(v.updatedAt),
+      note: v.version.changeNote ?? null,
+    }
+  })
+}
+
+export function relativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const minutes = Math.floor(diff / 60_000)
+  if (minutes < 1) return 'just now'
+  if (minutes < 60) return `${minutes} min ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours} hr ago`
+  const days = Math.floor(hours / 24)
+  if (days === 1) return 'yesterday'
+  if (days < 30) return `${days} days ago`
+  const months = Math.floor(days / 30)
+  if (months < 12) return `${months} month${months === 1 ? '' : 's'} ago`
+  const years = Math.floor(days / 365)
+  return `${years} year${years === 1 ? '' : 's'} ago`
+}
+
+export function favouriteIds(user: User | null | undefined): number[] {
+  return (user?.favourites ?? []).map(idOf).filter((id): id is number => id !== undefined)
+}
+
+export function siteInitial(name: string): string {
+  return (name.replace(/^the\s+/i, '')[0] || 'S').toUpperCase()
+}

@@ -1,5 +1,11 @@
 import { randomUUID } from 'crypto'
-import type { Access, CollectionBeforeChangeHook, CollectionConfig, Where } from 'payload'
+import type {
+  Access,
+  CollectionAfterChangeHook,
+  CollectionBeforeChangeHook,
+  CollectionConfig,
+  Where,
+} from 'payload'
 import { ValidationError } from 'payload'
 
 import {
@@ -11,7 +17,9 @@ import {
   siteIdsWithRole,
 } from '@/access/roles'
 import { magicLinkJwtStrategy } from '@/lib/auth/strategy'
+import { welcomeEmail } from '@/lib/emails'
 import { env } from '@/lib/env'
+import type { Site } from '@/payload-types'
 
 /** 90 days, in seconds. */
 export const SESSION_SECONDS = 60 * 60 * 24 * 90
@@ -57,6 +65,46 @@ const selfOrAdministeredSites: Access = ({ req }) => {
   return where
 }
 
+const ROLE_LABEL: Record<string, string> = {
+  viewer: 'Viewer',
+  editor: 'Editor',
+  siteAdmin: 'Site Admin',
+}
+
+/**
+ * Welcomes a user created by a Site Admin or Group Admin in the admin panel.
+ * Seeds and scripts have no req.user and send nothing.
+ */
+const sendWelcome: CollectionAfterChangeHook = async ({ doc, operation, req }) => {
+  if (operation !== 'create' || !req.user) return doc
+  const first = getMemberships(doc)[0]
+  if (!first) return doc
+  try {
+    const site = (await req.payload.findByID({
+      collection: 'sites',
+      id: first.siteId,
+      depth: 0,
+      overrideAccess: true,
+    })) as Site
+    const host = site.domains?.[0]?.hostname
+    const origin = host ? `https://${host}` : req.origin || ''
+    const adderRole = isGroupAdmin(req.user)
+      ? 'Group Admin'
+      : (ROLE_LABEL[getMemberships(req.user).find((m) => m.siteId === first.siteId)?.role ?? ''] ??
+        '')
+    const message = welcomeEmail({
+      site: { name: site.name, accent: site.accentColour ?? '#8B2D2D' },
+      name: doc.name,
+      signInUrl: `${origin}/sign-in`,
+      addedBy: adderRole ? `${req.user.name}, ${adderRole}` : req.user.name,
+    })
+    await req.payload.sendEmail({ to: doc.email, ...message })
+  } catch (error) {
+    req.payload.logger.error({ err: error }, 'Could not send welcome email')
+  }
+  return doc
+}
+
 export const Users: CollectionConfig = {
   slug: 'users',
   admin: {
@@ -91,6 +139,7 @@ export const Users: CollectionConfig = {
       },
     ],
     beforeChange: [guardMemberships],
+    afterChange: [sendWelcome],
   },
   fields: [
     {

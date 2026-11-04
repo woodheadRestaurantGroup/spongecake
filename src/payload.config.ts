@@ -13,6 +13,7 @@ import { LoginTokens } from './collections/LoginTokens'
 import { Media } from './collections/Media'
 import { Recipes } from './collections/Recipes'
 import { Sites } from './collections/Sites'
+import { Suggestions } from './collections/Suggestions'
 import { Tags } from './collections/Tags'
 import { Users } from './collections/Users'
 import { env, getDatabaseUrl, getPayloadSecret, parseEmailFrom } from './lib/env'
@@ -49,7 +50,7 @@ export default buildConfig({
       ],
     },
   },
-  collections: [Recipes, Tags, Media, Users, Sites, LoginTokens],
+  collections: [Recipes, Tags, Media, Suggestions, Users, Sites, LoginTokens],
   editor: lexicalEditor(),
   secret: getPayloadSecret(),
   typescript: {
@@ -106,6 +107,7 @@ export default buildConfig({
         recipes: {},
         tags: {},
         media: {},
+        suggestions: {},
       },
       userHasAccessToAllTenants: (user) => Boolean(user?.isGroupAdmin),
       // Sites are readable by everyone for branding; access is set on the collection itself.

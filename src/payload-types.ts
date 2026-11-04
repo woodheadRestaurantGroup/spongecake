@@ -70,6 +70,7 @@ export interface Config {
     recipes: Recipe;
     tags: Tag;
     media: Media;
+    suggestions: Suggestion;
     users: User;
     sites: Site;
     'login-tokens': LoginToken;
@@ -83,6 +84,7 @@ export interface Config {
     recipes: RecipesSelect<false> | RecipesSelect<true>;
     tags: TagsSelect<false> | TagsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    suggestions: SuggestionsSelect<false> | SuggestionsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     sites: SitesSelect<false> | SitesSelect<true>;
     'login-tokens': LoginTokensSelect<false> | LoginTokensSelect<true>;
@@ -141,6 +143,7 @@ export interface Recipe {
    * Who wrote this recipe. Site Admins can change it.
    */
   author: number | User;
+  lastEditedBy?: (number | null) | User;
   /**
    * Archived recipes are hidden from the front end but kept here.
    */
@@ -374,6 +377,22 @@ export interface User {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "suggestions".
+ */
+export interface Suggestion {
+  id: number;
+  site?: (number | null) | Site;
+  recipe: number | Recipe;
+  submittedBy: number | User;
+  body: string;
+  status: 'open' | 'resolved' | 'dismissed';
+  resolvedBy?: (number | null) | User;
+  resolvedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "login-tokens".
  */
 export interface LoginToken {
@@ -425,6 +444,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'suggestions';
+        value: number | Suggestion;
       } | null)
     | ({
         relationTo: 'users';
@@ -489,6 +512,7 @@ export interface RecipesSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
   author?: T;
+  lastEditedBy?: T;
   archived?: T;
   changeNote?: T;
   heroImage?: T;
@@ -592,6 +616,21 @@ export interface MediaSelect<T extends boolean = true> {
               filename?: T;
             };
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "suggestions_select".
+ */
+export interface SuggestionsSelect<T extends boolean = true> {
+  site?: T;
+  recipe?: T;
+  submittedBy?: T;
+  body?: T;
+  status?: T;
+  resolvedBy?: T;
+  resolvedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
