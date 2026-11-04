@@ -1,10 +1,9 @@
 import { createHash, randomBytes, randomInt } from 'crypto'
 import type { Payload } from 'payload'
 
-import type { User } from '@/payload-types'
+import { signInEmail, type EmailSite } from '@/lib/emails'
 import { env } from '@/lib/env'
-
-import { signInEmail } from './emails'
+import type { User } from '@/payload-types'
 
 export const TOKEN_TTL_MINUTES = 15
 const MAX_REQUESTS_PER_EMAIL = 5
@@ -93,8 +92,10 @@ export async function requestSignIn(args: {
   origin: string
   ip?: string
   redirectTo?: string
+  site?: EmailSite
 }): Promise<RequestResult> {
   const { payload, origin, ip, redirectTo } = args
+  const site: EmailSite = args.site ?? { name: 'Spongecake', accent: '#8B2D2D' }
   const email = normaliseEmail(args.email)
 
   const user =
@@ -131,7 +132,7 @@ export async function requestSignIn(args: {
   })
 
   const link = `${origin}/auth/verify?token=${encodeURIComponent(token)}`
-  const message = signInEmail({ name: user.name, link, code, ttlMinutes: TOKEN_TTL_MINUTES })
+  const message = signInEmail({ site, name: user.name, link, code, ttlMinutes: TOKEN_TTL_MINUTES })
   try {
     await payload.sendEmail({ to: email, ...message })
   } catch (error) {
