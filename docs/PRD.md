@@ -360,7 +360,7 @@ Expect roughly £20 to £35 per month in total at launch.
 - Magic link tokens are hashed at rest, single use, 15-minute expiry, rate limited.
 - Personal data held: name, email, role, favourites, recipe edit attribution. No other staff data. A Site Admin can delete a user; their authored recipes remain with the name retained for attribution, which should be noted in the staff privacy notice.
 - Neon point-in-time recovery covers backups. A weekly export of recipes to JSON is kept in Blob storage as a belt-and-braces measure.
-- Error monitoring via Sentry. Vercel Analytics for page performance.
+- Vercel function logs and Vercel Analytics cover runtime errors and page performance. A dedicated error monitoring tool such as Sentry is deliberately left out for now and can be added through the Vercel marketplace later if real-world iOS issues warrant it.
 - All traffic over HTTPS with HSTS. Admin and API share the same origin, so no CORS surface.
 
 ## 11. Resolved questions
@@ -388,7 +388,7 @@ Phases are sequential but short. Each ends with something deployable.
 
 | Phase | Scope | Exit criteria |
 |---|---|---|
-| **0. Foundations** | Repo scaffold, Next.js and Payload, Neon, Vercel project, Resend, Sentry, CI, QCH domain pointed at a holding page | Deploys to production on push to `main`; preview deploys per PR |
+| **0. Foundations** | Repo scaffold, Next.js and Payload, Neon, Vercel project, Resend, CI, QCH domain pointed at a holding page | Deploys to production on push to `main`; preview deploys per PR |
 | **1. Core** | Sites, Users with memberships and roles, magic link sign-in with code fallback, 90-day sliding sessions, Recipes, Tags, Media, tenant isolation tests, Payload admin with live preview, front-end home, search, recipe view and yield scaling | A QCH Editor can sign in, author a recipe in the admin, and a Viewer can read and scale it on an iPhone |
 | **2. App feel** | PWA manifest and icons per site, service worker and offline caching, prefetching and view transitions, favourites, recently viewed, cook mode with wake lock, print view, site branding | Lighthouse targets met; installed app works offline for viewed recipes |
 | **3. Collaboration** | Suggestions with email alerts, edit history with field-level diff, change notes, generated avatars, profile screen with install guide | Full suggest, notify, resolve loop works end to end |
@@ -415,6 +415,7 @@ Phases 1 to 3 are the build. Data entry in Phase 4 can begin as soon as Phase 1 
 | 2026-11-04 | Offline reading of viewed and favourited recipes is in v1. |
 | 2026-11-04 | Vercel hosting with functions in London; Neon Postgres in London. |
 | 2026-11-04 | No pilot; QCH launches directly. |
+| 2026-11-04 | No Sentry for now. Vercel logs and analytics suffice until real usage says otherwise. |
 | 2026-11-04 | Emails send from the group's existing Resend domain `send.woodheadrestaurantgroup.co.uk`. |
 | 2026-11-04 | Site Admins can override recipe authors so data-entry recipes are credited correctly. |
 | 2026-11-04 | Scaled quantities display to two decimal places, trailing zeros trimmed. |
