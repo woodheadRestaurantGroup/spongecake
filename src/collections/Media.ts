@@ -1,9 +1,27 @@
 import type { CollectionConfig } from 'payload'
 
+import {
+  EDITOR_ROLES,
+  anySiteAccess,
+  requireRoleAtSiteHook,
+  siteScopedAccess,
+} from '@/access/roles'
+
 export const Media: CollectionConfig = {
   slug: 'media',
+  admin: {
+    group: 'Content',
+  },
   access: {
+    // Image URLs are unguessable, and serving them without auth keeps them
+    // cacheable and lets the offline cache work.
     read: () => true,
+    create: anySiteAccess(EDITOR_ROLES),
+    update: siteScopedAccess(EDITOR_ROLES),
+    delete: siteScopedAccess(['siteAdmin']),
+  },
+  hooks: {
+    beforeValidate: [requireRoleAtSiteHook(EDITOR_ROLES)],
   },
   fields: [
     {

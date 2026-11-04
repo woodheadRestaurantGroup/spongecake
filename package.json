@@ -21,18 +21,22 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts",
-    "test:e2e": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" playwright test --config=playwright.config.ts"
+    "test:e2e": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" playwright test --config=playwright.config.ts",
+    "seed": "cross-env NODE_OPTIONS=--no-deprecation payload run src/scripts/seed.ts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.92.1",
     "@payloadcms/email-resend": "3.92.1",
+    "@payloadcms/live-preview-react": "3.92.1",
     "@payloadcms/next": "3.92.1",
+    "@payloadcms/plugin-multi-tenant": "3.92.1",
     "@payloadcms/richtext-lexical": "3.92.1",
     "@payloadcms/storage-vercel-blob": "3.92.1",
     "@payloadcms/ui": "3.92.1",
     "cross-env": "^7.0.3",
     "dotenv": "16.4.7",
     "graphql": "^16.8.1",
+    "jose": "5.10.0",
     "next": "16.3.3",
     "payload": "3.92.1",
     "react": "19.2.6",

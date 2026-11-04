@@ -67,8 +67,12 @@ export interface Config {
   };
   blocks: {};
   collections: {
-    users: User;
+    recipes: Recipe;
+    tags: Tag;
     media: Media;
+    users: User;
+    sites: Site;
+    'login-tokens': LoginToken;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -76,8 +80,12 @@ export interface Config {
   };
   collectionsJoins: {};
   collectionsSelect: {
-    users: UsersSelect<false> | UsersSelect<true>;
+    recipes: RecipesSelect<false> | RecipesSelect<true>;
+    tags: TagsSelect<false> | TagsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    users: UsersSelect<false> | UsersSelect<true>;
+    sites: SitesSelect<false> | SitesSelect<true>;
+    'login-tokens': LoginTokensSelect<false> | LoginTokensSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -119,30 +127,152 @@ export interface UserAuthOperations {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users".
+ * via the `definition` "recipes".
  */
-export interface User {
+export interface Recipe {
   id: number;
-  name: string;
-  updatedAt: string;
-  createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  resetPasswordRequestedAt?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
-  sessions?:
+  site?: (number | null) | Site;
+  title: string;
+  /**
+   * Generated from the title. Change it only if you need a specific address.
+   */
+  slug?: string | null;
+  /**
+   * Who wrote this recipe. Site Admins can change it.
+   */
+  author: number | User;
+  /**
+   * Archived recipes are hidden from the front end but kept here.
+   */
+  archived?: boolean | null;
+  /**
+   * What did you change? Shown in the recipe history.
+   */
+  changeNote?: string | null;
+  heroImage?: (number | null) | Media;
+  yield: {
+    amount: number;
+    /**
+     * For example portions, litres, trays, loaves.
+     */
+    label: string;
+  };
+  /**
+   * One section is fine. Add more to group ingredients, for example "For the sauce".
+   */
+  ingredientSections?:
     | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
+        /**
+         * Optional section heading.
+         */
+        title?: string | null;
+        ingredients?:
+          | {
+              quantity?: number | null;
+              unit?:
+                | ('g' | 'kg' | 'ml' | 'l' | 'tsp' | 'tbsp' | 'each' | 'pinch' | 'bunch' | 'sheet' | 'none' | 'other')
+                | null;
+              /**
+               * Custom unit
+               */
+              unitLabel?: string | null;
+              item?: string | null;
+              /**
+               * Link another recipe instead of naming an ingredient.
+               */
+              subRecipe?: (number | null) | Recipe;
+              /**
+               * For example "finely diced" or "room temperature".
+               */
+              note?: string | null;
+              /**
+               * Untick for items like seasoning that stay the same at any yield.
+               */
+              scales?: boolean | null;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
       }[]
     | null;
-  password?: string | null;
-  collection: 'users';
+  method?:
+    | {
+        text: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        };
+        image?: (number | null) | Media;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Chef's notes, service notes, storage.
+   */
+  notes?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  tags?: (number | Tag)[] | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sites".
+ */
+export interface Site {
+  id: number;
+  name: string;
+  /**
+   * Short identifier, for example "qch". Used in URLs and configuration.
+   */
+  slug: string;
+  /**
+   * Hostnames that serve this site, for example spongecake.thequalitychophouse.com
+   */
+  domains?:
+    | {
+        hostname: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Square logo, at least 512px, used in the header and as the home screen icon.
+   */
+  logo?: (number | null) | Media;
+  /**
+   * Hex colour for the top border and controls.
+   */
+  accentColour?: string | null;
+  /**
+   * Tags shown as sections on the home page, in this order.
+   */
+  homeTags?: (number | Tag)[] | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -150,6 +280,7 @@ export interface User {
  */
 export interface Media {
   id: number;
+  site?: (number | null) | Site;
   alt: string;
   updatedAt: string;
   createdAt: string;
@@ -191,6 +322,76 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tags".
+ */
+export interface Tag {
+  id: number;
+  site?: (number | null) | Site;
+  name: string;
+  slug?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users".
+ */
+export interface User {
+  id: number;
+  name: string;
+  /**
+   * Full access to every site. Reserved for group management.
+   */
+  isGroupAdmin?: boolean | null;
+  favourites?: (number | Recipe)[] | null;
+  avatarSeed?: string | null;
+  memberships?:
+    | {
+        site: number | Site;
+        role: 'viewer' | 'editor' | 'siteAdmin';
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  resetPasswordRequestedAt?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'users';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "login-tokens".
+ */
+export interface LoginToken {
+  id: number;
+  user: number | User;
+  email: string;
+  tokenHash: string;
+  codeHash: string;
+  expiresAt: string;
+  usedAt?: string | null;
+  attempts?: number | null;
+  requestIp?: string | null;
+  redirectTo?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -214,12 +415,28 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
-        relationTo: 'users';
-        value: number | User;
+        relationTo: 'recipes';
+        value: number | Recipe;
+      } | null)
+    | ({
+        relationTo: 'tags';
+        value: number | Tag;
       } | null)
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'users';
+        value: number | User;
+      } | null)
+    | ({
+        relationTo: 'sites';
+        value: number | Site;
+      } | null)
+    | ({
+        relationTo: 'login-tokens';
+        value: number | LoginToken;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -265,33 +482,70 @@ export interface PayloadMigration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users_select".
+ * via the `definition` "recipes_select".
  */
-export interface UsersSelect<T extends boolean = true> {
-  name?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  email?: T;
-  resetPasswordToken?: T;
-  resetPasswordExpiration?: T;
-  salt?: T;
-  hash?: T;
-  resetPasswordRequestedAt?: T;
-  loginAttempts?: T;
-  lockUntil?: T;
-  sessions?:
+export interface RecipesSelect<T extends boolean = true> {
+  site?: T;
+  title?: T;
+  slug?: T;
+  author?: T;
+  archived?: T;
+  changeNote?: T;
+  heroImage?: T;
+  yield?:
     | T
     | {
-        id?: T;
-        createdAt?: T;
-        expiresAt?: T;
+        amount?: T;
+        label?: T;
       };
+  ingredientSections?:
+    | T
+    | {
+        title?: T;
+        ingredients?:
+          | T
+          | {
+              quantity?: T;
+              unit?: T;
+              unitLabel?: T;
+              item?: T;
+              subRecipe?: T;
+              note?: T;
+              scales?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  method?:
+    | T
+    | {
+        text?: T;
+        image?: T;
+        id?: T;
+      };
+  notes?: T;
+  tags?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tags_select".
+ */
+export interface TagsSelect<T extends boolean = true> {
+  site?: T;
+  name?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media_select".
  */
 export interface MediaSelect<T extends boolean = true> {
+  site?: T;
   alt?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -338,6 +592,76 @@ export interface MediaSelect<T extends boolean = true> {
               filename?: T;
             };
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users_select".
+ */
+export interface UsersSelect<T extends boolean = true> {
+  name?: T;
+  isGroupAdmin?: T;
+  favourites?: T;
+  avatarSeed?: T;
+  memberships?:
+    | T
+    | {
+        site?: T;
+        role?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  email?: T;
+  resetPasswordToken?: T;
+  resetPasswordExpiration?: T;
+  salt?: T;
+  hash?: T;
+  resetPasswordRequestedAt?: T;
+  loginAttempts?: T;
+  lockUntil?: T;
+  sessions?:
+    | T
+    | {
+        id?: T;
+        createdAt?: T;
+        expiresAt?: T;
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sites_select".
+ */
+export interface SitesSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  domains?:
+    | T
+    | {
+        hostname?: T;
+        id?: T;
+      };
+  logo?: T;
+  accentColour?: T;
+  homeTags?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "login-tokens_select".
+ */
+export interface LoginTokensSelect<T extends boolean = true> {
+  user?: T;
+  email?: T;
+  tokenHash?: T;
+  codeHash?: T;
+  expiresAt?: T;
+  usedAt?: T;
+  attempts?: T;
+  requestIp?: T;
+  redirectTo?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

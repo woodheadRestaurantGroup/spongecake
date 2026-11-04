@@ -58,4 +58,5 @@ export const env = {
   resendApiKey: process.env.RESEND_API_KEY || undefined,
   blobToken: process.env.BLOB_READ_WRITE_TOKEN || undefined,
   defaultSiteSlug: process.env.DEFAULT_SITE_SLUG || undefined,
+  bootstrapAdminEmail: process.env.BOOTSTRAP_ADMIN_EMAIL || undefined,
 }
