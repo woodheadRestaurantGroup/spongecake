@@ -86,6 +86,13 @@ export default async function ProfilePage() {
           <span>Add to Home Screen</span>
           <ChevronRight className="text-ink-3" />
         </TransitionLink>
+        <TransitionLink
+          href="/privacy"
+          className="flex min-h-[56px] w-full items-center justify-between pl-3.5 pr-2.5 text-[16px] active:bg-surface-2"
+        >
+          <span>Privacy</span>
+          <ChevronRight className="text-ink-3" />
+        </TransitionLink>
         <form action={signOutAction}>
           <button
             type="submit"

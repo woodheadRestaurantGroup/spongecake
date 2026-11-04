@@ -4,6 +4,7 @@ Internal recipe database for Woodhead Restaurant Group kitchens. One branded ins
 
 - Product requirements: [docs/PRD.md](docs/PRD.md)
 - Design handoff (tokens, screens, emails): [docs/design/handoff/README.md](docs/design/handoff/README.md)
+- Launch checklist: [docs/LAUNCH.md](docs/LAUNCH.md) · Recipe entry guide: [docs/RECIPE-ENTRY.md](docs/RECIPE-ENTRY.md) · Staff privacy notice: [docs/PRIVACY-NOTICE.md](docs/PRIVACY-NOTICE.md)
 
 ## Stack
 
