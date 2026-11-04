@@ -7,6 +7,7 @@ import { Avatar } from '@/components/Avatar'
 import { BackButton, TransitionLink } from '@/components/nav/ViewTransitions'
 import { Button, DraftBadge, SectionLabel, TagPill, cx } from '@/components/ui'
 import { BottomSheet } from '@/components/ui/BottomSheet'
+import { OfflineIndicator } from '@/components/pwa/OfflineIndicator'
 import { ChevronSmall, Clock, Heart, Minus, Phone, Plus } from '@/components/ui/icons'
 import { formatIngredientQuantity, formatQuantity, scaleFactor } from '@/lib/recipes/scaling'
 
@@ -480,6 +481,7 @@ export function RecipeScreen({ recipe }: { recipe: RecipeView }) {
         {heart}
       </div>
 
+      <OfflineIndicator className="flex justify-center px-4 pb-1" />
       <div className="px-4 pt-2 lg:px-0 lg:pt-0">
         {/* Desktop header row */}
         <div className="lg:flex lg:items-start lg:gap-6">

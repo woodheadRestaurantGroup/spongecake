@@ -416,6 +416,8 @@ Phases 1 to 3 are the build. Data entry in Phase 4 can begin as soon as Phase 1 
 | 2026-11-04 | Vercel hosting with functions in London; Neon Postgres in London. |
 | 2026-11-04 | No pilot; QCH launches directly. |
 | 2026-11-04 | No Sentry for now. Vercel logs and analytics suffice until real usage says otherwise. |
+| 2026-11-04 | Visual design from the Claude Design handoff applied in full (see docs/design/handoff). Site tiles use the site's initial on its accent rather than an uploaded logo. |
+| 2026-11-04 | Offline uses a hand-written service worker served from a route with the deployment id, rather than a build plugin, because production builds use Turbopack. Pages are network-first with a three-second timeout, then the saved copy, then the offline page. |
 | 2026-11-04 | Emails send from the group's existing Resend domain `send.woodheadrestaurantgroup.co.uk`. |
 | 2026-11-04 | Site Admins can override recipe authors so data-entry recipes are credited correctly. |
 | 2026-11-04 | Scaled quantities display to two decimal places, trailing zeros trimmed. |

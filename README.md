@@ -15,6 +15,7 @@ Next.js 16 (App Router) with Payload 3, Postgres (Neon in production), Vercel Bl
 - **Users** hold one membership per site with a role: Viewer, Editor or Site Admin. Group Admins span every site. Access rules live in `src/access/roles.ts` and on each collection.
 - **Sign-in** is by magic link or six-digit code (`src/lib/auth`). There are no passwords. Sessions are 90-day JWT cookies and renew themselves past the midpoint.
 - **Recipes** are authored in the Payload admin at `/admin` with live preview. The front end under `src/app/(frontend)` renders them for phones, with yield scaling done client side, a full-screen cook mode, favourites, history, and suggestions that email the site's editors.
+- **Offline and install.** `/sw.js` serves a service worker stamped with the deployment id (`src/lib/pwa/serviceWorker.ts`). It saves pages you open, the home page and your favourites, and falls back to `/offline`. `/manifest.webmanifest` and `/pwa/icon/[size]` are generated per site. The worker only registers in production builds.
 - **Design tokens** live in `src/app/(frontend)/tokens.css` (Tailwind 4 theme, light and dark). The per-site accent is set on `<html>` from the site record. Avatars are generated from the user's email by `src/lib/avatar.ts` and must never change once shipped.
 
 ## Local development

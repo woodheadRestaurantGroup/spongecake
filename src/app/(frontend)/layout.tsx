@@ -2,15 +2,21 @@ import type { Metadata, Viewport } from 'next'
 import React from 'react'
 
 import { ViewTransitionsProvider } from '@/components/nav/ViewTransitions'
+import { RegisterServiceWorker } from '@/components/pwa/RegisterServiceWorker'
 import { getRequestContext } from '@/lib/request'
 
 import './globals.css'
 
-export const metadata: Metadata = {
-  title: { default: 'Spongecake', template: '%s · Spongecake' },
-  description: 'Recipe database for Woodhead Restaurant Group kitchens.',
-  robots: { index: false, follow: false },
-  appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Spongecake' },
+export async function generateMetadata(): Promise<Metadata> {
+  const { site } = await getRequestContext()
+  return {
+    title: { default: 'Spongecake', template: '%s · Spongecake' },
+    description: 'Recipe database for Woodhead Restaurant Group kitchens.',
+    robots: { index: false, follow: false },
+    manifest: '/manifest.webmanifest',
+    icons: { apple: '/pwa/icon/180' },
+    appleWebApp: { capable: true, statusBarStyle: 'default', title: site?.name ?? 'Spongecake' },
+  }
 }
 
 export const viewport: Viewport = {
@@ -48,6 +54,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="min-h-dvh bg-bg font-sans text-ink">
         <ViewTransitionsProvider>{children}</ViewTransitionsProvider>
+        <RegisterServiceWorker />
       </body>
     </html>
   )

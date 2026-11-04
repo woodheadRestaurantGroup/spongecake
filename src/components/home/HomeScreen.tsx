@@ -7,6 +7,8 @@ import { Avatar, type AvatarParams } from '@/components/Avatar'
 import { TransitionLink } from '@/components/nav/ViewTransitions'
 import { Button, EmptyState, GroupedList, SectionLabel, cx } from '@/components/ui'
 import { ChevronRight, ClearCircle, Search } from '@/components/ui/icons'
+import { OfflineIndicator } from '@/components/pwa/OfflineIndicator'
+import { PrefetchFavourites } from '@/components/pwa/PrefetchFavourites'
 import { useLocalStorageValue } from '@/lib/localStorage'
 import { parseRecent, recentKey, viewedLabel } from '@/lib/recent'
 import type { RecipeSummary, TagSummary } from '@/lib/recipes/queries'
@@ -256,7 +258,9 @@ export function HomeScreen({
             <span className="w-6 shrink-0" aria-hidden />
           </div>
         )}
+        <OfflineIndicator className="flex justify-center px-4 pt-2.5" />
       </div>
+      <PrefetchFavourites slugs={favourites.map((r) => r.slug)} />
 
       {filtering ? (
         <>
