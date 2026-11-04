@@ -89,6 +89,55 @@ describe('magic link sign-in', () => {
     expect(await verifyToken(payload, token)).toBeNull()
   })
 
+  it('bootstraps the first Group Admin, promoting an existing account if there is one', async () => {
+    const { env } = await import('@/lib/env')
+    // Temporarily demote any admins so the bootstrap condition holds.
+    const admins = await payload.find({
+      collection: 'users',
+      where: { isGroupAdmin: { equals: true } },
+      limit: 100,
+      overrideAccess: true,
+    })
+    for (const a of admins.docs)
+      await payload.update({
+        collection: 'users',
+        id: a.id,
+        data: { isGroupAdmin: false },
+        overrideAccess: true,
+      })
+
+    const plain = await createUser(payload, 'Bootstrap', [])
+    env.bootstrapAdminEmail = plain.email.toUpperCase()
+    try {
+      const result = await requestSignIn({ payload, email: plain.email, origin: 'http://test' })
+      expect(result.sent).toBe(true)
+      const promoted = await payload.findByID({
+        collection: 'users',
+        id: plain.id,
+        overrideAccess: true,
+      })
+      expect(promoted.isGroupAdmin).toBe(true)
+
+      // A second address does not bootstrap once an admin exists.
+      env.bootstrapAdminEmail = `other-${run}@example.test`
+      const second = await requestSignIn({
+        payload,
+        email: env.bootstrapAdminEmail,
+        origin: 'http://test',
+      })
+      expect(second.reason).toBe('unknown-user')
+    } finally {
+      env.bootstrapAdminEmail = undefined
+      for (const a of admins.docs)
+        await payload.update({
+          collection: 'users',
+          id: a.id,
+          data: { isGroupAdmin: true },
+          overrideAccess: true,
+        })
+    }
+  })
+
   it('rate limits repeated requests', async () => {
     const results = []
     for (let i = 0; i < 6; i++) {

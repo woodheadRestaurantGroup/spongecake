@@ -31,14 +31,31 @@ async function findUserByEmail(payload: Payload, email: string): Promise<User | 
 }
 
 /**
- * The very first account. When no users exist at all and the email matches
- * BOOTSTRAP_ADMIN_EMAIL, a Group Admin is created on first sign-in request.
- * After that the variable does nothing, so it is safe to leave set.
+ * The very first Group Admin. While no Group Admin exists and the email
+ * matches BOOTSTRAP_ADMIN_EMAIL, a sign-in request from that address either
+ * creates the account or promotes an existing account with that email.
+ * Once a Group Admin exists the variable does nothing, so it is safe to leave set.
  */
 async function bootstrapGroupAdmin(payload: Payload, email: string): Promise<User | null> {
   if (!env.bootstrapAdminEmail || normaliseEmail(env.bootstrapAdminEmail) !== email) return null
-  const existing = await payload.count({ collection: 'users', overrideAccess: true })
-  if (existing.totalDocs > 0) return null
+  const admins = await payload.count({
+    collection: 'users',
+    where: { isGroupAdmin: { equals: true } },
+    overrideAccess: true,
+  })
+  if (admins.totalDocs > 0) return null
+
+  const existing = await findUserByEmail(payload, email)
+  if (existing) {
+    payload.logger.info({ email }, 'Bootstrap: promoting existing user to Group Admin')
+    return payload.update({
+      collection: 'users',
+      id: existing.id,
+      data: { isGroupAdmin: true },
+      overrideAccess: true,
+    })
+  }
+  payload.logger.info({ email }, 'Bootstrap: creating the first Group Admin')
   return payload.create({
     collection: 'users',
     data: { email, name: email.split('@')[0], isGroupAdmin: true },
@@ -60,7 +77,10 @@ async function recentRequestCount(
   return result.totalDocs
 }
 
-export type RequestResult = { sent: boolean; reason?: 'unknown-user' | 'rate-limited' }
+export type RequestResult = {
+  sent: boolean
+  reason?: 'unknown-user' | 'rate-limited' | 'send-failed'
+}
 
 /**
  * Creates a one-time token and six-digit code and emails them. Returns the
@@ -78,8 +98,11 @@ export async function requestSignIn(args: {
   const email = normaliseEmail(args.email)
 
   const user =
-    (await findUserByEmail(payload, email)) ?? (await bootstrapGroupAdmin(payload, email))
-  if (!user) return { sent: false, reason: 'unknown-user' }
+    (await bootstrapGroupAdmin(payload, email)) ?? (await findUserByEmail(payload, email))
+  if (!user) {
+    payload.logger.info({ email }, 'Sign-in requested for an email with no account; nothing sent')
+    return { sent: false, reason: 'unknown-user' }
+  }
 
   if ((await recentRequestCount(payload, 'email', email)) >= MAX_REQUESTS_PER_EMAIL) {
     return { sent: false, reason: 'rate-limited' }
@@ -109,8 +132,14 @@ export async function requestSignIn(args: {
 
   const link = `${origin}/auth/verify?token=${encodeURIComponent(token)}`
   const message = signInEmail({ name: user.name, link, code, ttlMinutes: TOKEN_TTL_MINUTES })
-  await payload.sendEmail({ to: email, ...message })
+  try {
+    await payload.sendEmail({ to: email, ...message })
+  } catch (error) {
+    payload.logger.error({ err: error, email }, 'Sign-in email could not be sent')
+    return { sent: false, reason: 'send-failed' }
+  }
 
+  payload.logger.info({ email }, 'Sign-in email sent')
   return { sent: true }
 }
 

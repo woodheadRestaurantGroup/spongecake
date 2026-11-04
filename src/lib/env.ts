@@ -53,7 +53,13 @@ export function parseEmailFrom(value: string | undefined): EmailFrom {
   return { name: fallback.name, address: value.trim() }
 }
 
-export const env = {
+export const env: {
+  isProduction: boolean
+  resendApiKey: string | undefined
+  blobToken: string | undefined
+  defaultSiteSlug: string | undefined
+  bootstrapAdminEmail: string | undefined
+} = {
   isProduction,
   resendApiKey: process.env.RESEND_API_KEY || undefined,
   blobToken: process.env.BLOB_READ_WRITE_TOKEN || undefined,

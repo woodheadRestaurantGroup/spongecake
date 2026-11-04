@@ -29,6 +29,9 @@ export async function requestSignInAction(
   if (result.reason === 'rate-limited') {
     return { error: 'Too many sign-in emails just now. Wait a few minutes and try again.' }
   }
+  if (result.reason === 'send-failed') {
+    return { error: 'We could not send the email. Try again in a moment, or tell your site admin.' }
+  }
 
   const params = new URLSearchParams({ email })
   if (redirectTo !== '/') params.set('redirect', redirectTo)
