@@ -14,6 +14,7 @@ export const Tags: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'slug'],
+    group: 'Content',
   },
   access: {
     read: siteScopedAccess(MEMBER_ROLES),

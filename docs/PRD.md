@@ -91,7 +91,7 @@ Rules:
 - Links and codes expire after 15 minutes and are single use.
 - Requests are rate limited per email and per IP.
 - Unknown emails receive no email and the UI gives the same "check your inbox" response, so the form cannot be used to discover accounts.
-- Group Admins additionally keep a password for break-glass access to the admin panel in case email delivery fails. James is the sole Group Admin at launch.
+- There are no passwords at all, for anyone. Payload's password strategy is switched off. If email delivery fails, existing sessions keep working for up to 90 days while the Resend configuration is fixed in Vercel. James is the sole Group Admin at launch.
 
 ### 5.2 Session persistence
 
@@ -102,7 +102,7 @@ Rules:
 
 ### 5.3 Payload admin access
 
-Editors and Site Admins use the same magic link flow for the Payload admin panel at `/admin` on their site's domain. The default Payload login view is replaced with the Spongecake sign-in. Group Admins also see the password form.
+Editors and Site Admins use the same magic link flow for the Payload admin panel at `/admin` on their site's domain. The Payload login page shows a single "Sign in with email" button that leads to the Spongecake sign-in and returns to the admin afterwards. Viewers are refused at the admin door.
 
 ## 6. Data model
 
@@ -422,4 +422,5 @@ Phases 1 to 3 are the build. Data entry in Phase 4 can begin as soon as Phase 1 
 | 2026-11-04 | Every signed-in user can suggest edits; Editors create tags, Site Admins curate the home page. |
 | 2026-11-04 | User-selectable theme: Light, Dark or System. |
 | 2026-11-04 | James is the only Group Admin at launch. |
+| 2026-11-04 | No password fallback: Payload's password strategy is disabled outright. The first Group Admin is bootstrapped from `BOOTSTRAP_ADMIN_EMAIL`. |
 | 2026-11-04 | Images: hero plus optional inline per-step images. Five sites and domains confirmed. |

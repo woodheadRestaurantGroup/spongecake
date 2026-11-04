@@ -29,6 +29,7 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
+    avatar: 'default',
     meta: {
       titleSuffix: ' · Spongecake',
     },

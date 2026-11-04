@@ -4,9 +4,10 @@ import React from 'react'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Spongecake',
+  title: { default: 'Spongecake', template: '%s · Spongecake' },
   description: 'Recipe database for Woodhead Restaurant Group kitchens.',
   robots: { index: false, follow: false },
+  appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Spongecake' },
 }
 
 export const viewport: Viewport = {
@@ -19,10 +20,16 @@ export const viewport: Viewport = {
   ],
 }
 
+/** Applies the stored theme before first paint so there is no flash. */
+const themeScript = `(function(){try{var t=localStorage.getItem('theme');var d=t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.theme=d?'dark':'light'}catch(e){}})()`
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en-GB">
-      <body className="min-h-dvh bg-stone-50 text-stone-900 antialiased dark:bg-stone-900 dark:text-stone-100">
+    <html lang="en-GB" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <body className="min-h-dvh bg-stone-50 font-sans text-stone-900 antialiased dark:bg-stone-900 dark:text-stone-100">
         {children}
       </body>
     </html>

@@ -8,6 +8,13 @@ Internal recipe database for Woodhead Restaurant Group kitchens. One branded ins
 
 Next.js 16 (App Router) with Payload 3, Postgres (Neon in production), Vercel Blob for images, Resend for email, Tailwind CSS. Hosted on Vercel with functions in London.
 
+## How it fits together
+
+- **Sites** are tenants. The request hostname picks the site; `DEFAULT_SITE_SLUG` is the fallback for previews and local development.
+- **Users** hold one membership per site with a role: Viewer, Editor or Site Admin. Group Admins span every site. Access rules live in `src/access/roles.ts` and on each collection.
+- **Sign-in** is by magic link or six-digit code (`src/lib/auth`). There are no passwords. Sessions are 90-day JWT cookies and renew themselves past the midpoint.
+- **Recipes** are authored in the Payload admin at `/admin` with live preview. The front end under `src/app/(frontend)` renders them for phones, with yield scaling done client side.
+
 ## Local development
 
 Requirements: Node 22, pnpm 10, Postgres 16 (or Docker).
@@ -31,12 +38,20 @@ pnpm migrate
 ```
 
 ```bash
+pnpm seed
+```
+
+```bash
 pnpm dev
 ```
 
-The front end is at http://localhost:3000 and the Payload admin at http://localhost:3000/admin. The first visit to the admin asks you to create the first user.
+The seed creates the QCH site on `localhost` with three users: `admin@example.com` (Group Admin), `editor@example.com` (Editor) and `viewer@example.com` (Viewer). Sign in at http://localhost:3000/sign-in with one of those addresses. Without a Resend key the email is printed to the terminal, so copy the six-digit code from there.
 
-Without a Resend key, emails are printed to the terminal. Without a Blob token, uploads are stored under `/media`.
+The Payload admin is at http://localhost:3000/admin and uses the same sign-in. Without a Blob token, uploads are stored under `/media`.
+
+## First admin in a real environment
+
+Set `BOOTSTRAP_ADMIN_EMAIL` to the Group Admin's address. While the users table is empty, the first sign-in request from that address creates the account. After that the variable does nothing.
 
 ## Database changes
 
@@ -54,7 +69,13 @@ pnpm migrate
 pnpm generate:types
 ```
 
-Commit the generated files under `src/migrations` and `src/payload-types.ts`. Vercel runs pending migrations as the first step of every build.
+If you add or change admin UI components, also run:
+
+```bash
+pnpm generate:importmap
+```
+
+Commit the generated files under `src/migrations`, `src/payload-types.ts` and `src/app/(payload)/admin/importMap.js`. Vercel runs pending migrations and regenerates the import map as the first steps of every build.
 
 ## Checks
 
@@ -70,7 +91,7 @@ pnpm typecheck
 pnpm test
 ```
 
-Tests run against the database in `test.env` and apply migrations first. CI runs the same three commands on every pull request.
+Tests run against the database in `test.env`, apply migrations first, and include cross-site isolation checks for every role. CI runs the same three commands on every pull request.
 
 ## Environments
 

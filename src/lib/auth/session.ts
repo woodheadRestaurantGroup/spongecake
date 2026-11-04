@@ -122,7 +122,8 @@ export function sessionCookieOptions(exp: number) {
   }
 }
 
-/** Seconds remaining before the token expires, from its exp claim. */
-export function secondsUntilExpiry(exp: number): number {
-  return exp - Math.floor(Date.now() / 1000)
+/** True once a session is past the midpoint of its life and should be reissued. */
+export function shouldRefreshSession(exp: number | null, tokenExpiration: number): boolean {
+  if (exp === null) return false
+  return exp - Math.floor(Date.now() / 1000) < tokenExpiration / 2
 }
