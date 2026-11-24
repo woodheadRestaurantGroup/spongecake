@@ -10,6 +10,7 @@ import { ValidationError } from 'payload'
 
 import {
   ADMIN_ROLES,
+  MEMBER_ROLES,
   anySiteAccess,
   getMemberships,
   groupAdminOnly,
@@ -54,7 +55,7 @@ const guardMemberships: CollectionBeforeChangeHook = ({ data, originalDoc, req }
   return data
 }
 
-/** Group Admins see everyone; Site Admins see members of their sites; everyone sees themselves. */
+/** Group Admins edit everyone; Site Admins edit members of their sites; everyone edits themselves. */
 const selfOrAdministeredSites: Access = ({ req }) => {
   if (!req.user) return false
   if (isGroupAdmin(req.user)) return true
@@ -62,6 +63,20 @@ const selfOrAdministeredSites: Access = ({ req }) => {
   const adminSites = siteIdsWithRole(req.user, ['siteAdmin'])
   if (adminSites.length === 0) return self
   const where: Where = { or: [self, { 'memberships.site': { in: adminSites } }] }
+  return where
+}
+
+/**
+ * Reading is wider than editing: anyone can see the people at their own
+ * sites and the Group Admins, so authors and editors show by name.
+ */
+const readableUsers: Access = ({ req }) => {
+  if (!req.user) return false
+  if (isGroupAdmin(req.user)) return true
+  const mySites = siteIdsWithRole(req.user, MEMBER_ROLES)
+  const clauses: Where[] = [{ id: { equals: req.user.id } }, { isGroupAdmin: { equals: true } }]
+  if (mySites.length > 0) clauses.push({ 'memberships.site': { in: mySites } })
+  const where: Where = { or: clauses }
   return where
 }
 
@@ -126,7 +141,7 @@ export const Users: CollectionConfig = {
   },
   access: {
     admin: ({ req }) => isGroupAdmin(req.user) || siteIdsWithRole(req.user, ADMIN_ROLES).length > 0,
-    read: selfOrAdministeredSites,
+    read: readableUsers,
     create: anySiteAccess(['siteAdmin']),
     update: selfOrAdministeredSites,
     delete: groupAdminOnly,

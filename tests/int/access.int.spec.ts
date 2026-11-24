@@ -233,10 +233,47 @@ describe('tenant isolation', () => {
     })
   })
 
+  describe('loading a recipe the way the admin does', () => {
+    it('an editor can load their recipe with drafts, which also reads versions', async () => {
+      const doc = await payload.findByID({
+        collection: 'recipes',
+        id: publishedA.id,
+        draft: true,
+        ...actingAs(editorA),
+      })
+      expect(doc.id).toBe(publishedA.id)
+      const versions = await payload.findVersions({
+        collection: 'recipes',
+        where: { parent: { equals: publishedA.id } },
+        ...actingAs(editorA),
+      })
+      expect(versions.totalDocs).toBeGreaterThan(0)
+      const count = await payload.countVersions({
+        collection: 'recipes',
+        where: { parent: { equals: publishedA.id } },
+        ...actingAs(editorA),
+      })
+      expect(count.totalDocs).toBe(versions.totalDocs)
+    })
+
+    it('a viewer cannot read versions of another site', async () => {
+      const versions = await payload.findVersions({
+        collection: 'recipes',
+        where: { parent: { equals: publishedB.id } },
+        ...actingAs(viewerA),
+      })
+      expect(versions.totalDocs).toBe(0)
+    })
+  })
+
   describe('users', () => {
-    it('a viewer sees only themselves', async () => {
+    it('a viewer sees the people at their site and group admins, not other sites', async () => {
       const result = await payload.find({ collection: 'users', ...actingAs(viewerA), limit: 100 })
-      expect(ids(result.docs)).toEqual([viewerA.id])
+      const found = ids(result.docs)
+      expect(found).toContain(viewerA.id)
+      expect(found).toContain(editorA.id)
+      expect(found).toContain(groupAdmin.id)
+      expect(found).not.toContain(viewerB.id)
     })
 
     it('a site admin sees members of their site and not others', async () => {
@@ -249,7 +286,6 @@ describe('tenant isolation', () => {
       expect(found).toContain(viewerA.id)
       expect(found).toContain(editorA.id)
       expect(found).not.toContain(viewerB.id)
-      expect(found).not.toContain(groupAdmin.id)
     })
 
     it('a site admin cannot grant membership at another site', async () => {

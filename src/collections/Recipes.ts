@@ -114,7 +114,8 @@ export const Recipes: CollectionConfig = {
       const where: Where = { or: clauses }
       return where
     },
-    readVersions: siteScopedAccess(MEMBER_ROLES),
+    // Version rows nest the document under `version`, so the constraint must be on version.site.
+    readVersions: siteScopedAccess(MEMBER_ROLES, 'version.site'),
     create: anySiteAccess(EDITOR_ROLES),
     update: siteScopedAccess(EDITOR_ROLES),
     delete: siteScopedAccess(['siteAdmin']),

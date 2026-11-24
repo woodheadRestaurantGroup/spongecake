@@ -110,6 +110,12 @@ export default buildConfig({
         suggestions: {},
       },
       userHasAccessToAllTenants: (user) => Boolean(user?.isGroupAdmin),
+      // The plugin limits the users list to people at the reader's sites. Group Admins
+      // belong to no site, so let them through for reads: they appear as authors.
+      usersAccessResultOverride: ({ accessKey, accessResult }) => {
+        if (accessKey !== 'read' || typeof accessResult !== 'object') return accessResult
+        return { or: [accessResult, { isGroupAdmin: { equals: true } }] }
+      },
       // Sites are readable by everyone for branding; access is set on the collection itself.
       useTenantsCollectionAccess: false,
       i18n: {
