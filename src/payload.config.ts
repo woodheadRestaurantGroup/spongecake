@@ -41,8 +41,14 @@ export default buildConfig({
     livePreview: {
       collections: ['recipes'],
       url: ({ data, req }) => {
-        const origin = req.origin || new URL(req.url || 'http://localhost:3000').origin
+        // Behind Vercel the public hostname is in x-forwarded-host; req.origin can be internal.
+        const forwardedHost = req.headers.get('x-forwarded-host')
+        const proto = req.headers.get('x-forwarded-proto') ?? 'https'
+        const origin = forwardedHost
+          ? `${proto}://${forwardedHost}`
+          : req.origin || new URL(req.url || 'http://localhost:3000').origin
         const slug = typeof data?.slug === 'string' && data.slug ? data.slug : data?.id
+        if (!slug) return null
         return `${origin}/recipes/${slug}?preview=true`
       },
       breakpoints: [
