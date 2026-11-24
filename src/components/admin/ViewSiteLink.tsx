@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import React from 'react'
 
 /**
@@ -6,12 +7,12 @@ import React from 'react'
  */
 export function ViewSiteLink() {
   return (
-    <a
+    <Link
       href="/"
       className="btn btn--style-pill btn--size-small"
       style={{ margin: 0, textDecoration: 'none', whiteSpace: 'nowrap' }}
     >
       View site
-    </a>
+    </Link>
   )
 }
