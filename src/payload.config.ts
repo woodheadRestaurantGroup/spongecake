@@ -35,6 +35,7 @@ export default buildConfig({
       titleSuffix: ' · Spongecake',
     },
     components: {
+      actions: ['@/components/admin/ViewSiteLink#ViewSiteLink'],
       beforeLogin: ['@/components/admin/MagicLinkLogin#MagicLinkLogin'],
     },
     livePreview: {
